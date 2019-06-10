@@ -1,0 +1,77 @@
+
+
+Links:
+https://en.wikipedia.org/wiki/Algebraic_notation_(chess)
+https://www.unicode.org/charts/PDF/U1FA00.pdf
+https://codereview.stackexchange.com/questions/173656/chess-game-in-c
+https://www.google.com/search?q=how+to+make+chess+game+c%2B%2B&oq=how+to+make+chess+game+c%2B%2B&aqs=chrome..69i57j0l4.4073j0j7&sourceid=chrome&ie=UTF-8#kpvalbx=1
+https://www.codeproject.com/Articles/1214018/Chess-Console-Game-in-Cplusplus
+
+C++ Links:
+https://www.geeksforgeeks.org/map-associative-containers-the-c-standard-template-library-stl/
+https://www.geeksforgeeks.org/type-inference-in-c-auto-and-decltype/
+https://stackoverflow.com/questions/7627098/what-is-a-lambda-expression-in-c11
+
+UNICODE:  maybe wait on this and just use QKRBNP for now
+Unicode Character 'BLACK SQUARE' (U+25A0)
+Unicode Character 'WHITE SQUARE' (U+25A1)
+void printChessPiecesUnicode()
+{
+   _setmode(_fileno(stdout), _O_WTEXT);
+   std::wcout << L'\u2654' << ' ' <<  L'\u2655' << ' ' << L'\u2656' << ' ' 
+              << L'\u2657' << ' ' << L'\u2658' << ' ' << L'\u2659' << endl;
+   std::wcout << L'\u265A' << ' ' <<  L'\u265B' << ' ' << L'\u265C' << ' ' 
+              << L'\u265D' << ' ' << L'\u265E' << ' ' << L'\u265F' << endl;
+}
+^Black QKRBNP, White QKRBNP
+
+Task: Make a chess game playable in the shell.
+
+Some notes:
+- Determine legality of moves, then move pieces and reprint board.
+- Each piece will be a class (child of Piece class?). Each piece will be instances, instantiated as white or black (in cli). Coin flip for which color you are would require twice as many Unicode characters bc flipped pieces, so maybe just always P1 white P2 black...Tests to make sure right amount of pieces in the right places at the beginning.
+- Functions to move pieces, to determine legality, to eliminate pieces.
+- Board is printed 2D array.  Is graveyard print necessary? Is bringing back pieces possible?
+- Perhaps each element of array is a pointer that points to a Unicode character of piece or square. Or perhaps even another struct with piece (can be null) and default square.
+- Need to look up rules. Esp king-rook swap thing.
+- Move_legal bool calls function from correct piece and takes into account board boundaries. I anticipate this being the hardest part.
+- Check and check mate as calls or automated? Tested each turn?
+
+Mandatory: Code must be pretty. Must play like real chess.
+
+Optional:
+Other player can be automated (random legal moves) or have 2-player.
+Maybe even live or random.
+
+
+cli:
+- instatiate board array
+- instantiate pieces
+- put them in the right place in the array
+- loop turns until check mate or stale mate quit option
+- print winner
+- exit or play again
+
+library:
+- piece classes
+- enums for characters-pieces to typeable piece names for user
+- legality functions
+- turn taking functions: prompt(piece, coordinate, enter), legality check(print message if no, make move if yes), making moves = array manipulation, print board, return
+- making moves:
+  - if opponent piece present, erase from new square, delete opponent piece
+  - if/once empty, copy player piece into new square
+  - erase player piece from old square
+  - copy default color into old square
+  (copy, erase square(move or kill(delete), return to default), print, return
+- winner functions: determine and print, maybe in cli
+
+
+
+Pawns:
+- color
+- first move bool
+- diagonal kill bool
+
+Knight:
+- color
+- L-shape move bool
