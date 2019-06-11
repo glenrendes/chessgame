@@ -44,7 +44,7 @@ public:
   Position(){ x = -1; y = -1; }
   Position(int ux, int uy){ init(ux, uy); }
   Position(const Position &pos){ init(pos.x, pos.y); }
-  Position& operator=(const Position &pos){ return *this; }
+  Position operator=(const Position &pos){ init(pos.x, pos.y); return *this; }
   bool operator==(const Position &pos){ return (x == pos.x) && (y == pos.y);}
   void init(int ux, int uy){ x = ux; y = uy; }
   void init_standard_notation(){}
