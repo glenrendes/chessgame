@@ -99,7 +99,6 @@ void Board::make_move(Move *move){
   board[move->from.x][move->from.y] = nullptr;
 }
 void Board::clear(){
-  gy.clear();
   for( int i = 0; i < ROWS; i++ ){
     for( int j = 0; j < COLUMNS; j++ ){
       if( board[i][j] != nullptr ){
@@ -119,11 +118,11 @@ std::string Human::get_input(bool quantifier){
   is >> input;
   return input;
 }
-bool Player::is_pos(std::string input){
+bool Human::is_pos(std::string input){
   if( isdigit(input[0]) && isdigit(input[1]) && input.length() == 2 && input[0] >= 0 ) return true;
   else return false;
 }
-Position Player::get_pos(std::string input, bool quantifier){
+Position Human::get_pos(std::string input, bool quantifier){
   Position from, to;
   if( quantifier == FROM ){
     from.x = input[0] - '0';
@@ -330,9 +329,11 @@ void Game::load(){
   os << "Enter name of game to be loaded (do not include .chess) : ";
   is >> answer;
   if ( answer.length() < 2 ) help();
-  else answer = answer + ".chess";
-  if( file_exists(answer) ) load_file(answer);
-  else{ os << "This game does not exist.\n"; load(); }
+  else{
+    answer = answer + ".chess";
+    if( file_exists(answer) ) load_file(answer);
+    else{ os << "This game does not exist.\n"; load(); }
+  }
 }
 bool Game::mode(){
   bool mode = 0;
@@ -347,6 +348,7 @@ bool Game::mode(){
 
 void Game::restart(){
   gb.clear();
+  gb.gy.clear();
   gb.init();
   turn = 'W';
   gb.print();
@@ -417,7 +419,9 @@ void Game::play(){
 //need to move to cli
 int main(){
   Game *game1 = new Game;
+  accounting();
   game1->play();
-  //delete game1; 
+  delete game1;
+  accounting();
   return 0;
 }

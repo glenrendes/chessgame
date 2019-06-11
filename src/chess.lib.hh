@@ -18,6 +18,21 @@
 std::ostream &os = std::cout;
 std::istream &is = std::cin;
 
+int count = 0;
+void *operator new(size_t size){
+  //os << "Allocated memory.\n"; //also had constructors and destructors printing class identifiers at some point
+  count++;
+  void *pt = malloc(size);
+  return pt;
+}
+void operator delete(void* pt){
+  //os << "Deallocated memory.\n";
+  count--;
+  free(pt);
+}
+void accounting(){
+  os << "Outstanding memory allocations: " << count << ".\n";
+}
 
 //---------------------------------------------------
 //---------------------------------------------------
@@ -28,6 +43,9 @@ public:
   int y;
   Position(){ x = -1; y = -1; }
   Position(int ux, int uy){ init(ux, uy); }
+  Position(const Position &pos){ init(pos.x, pos.y); }
+  Position& operator=(const Position &pos){ return *this; }
+  bool operator==(const Position &pos){ return (x == pos.x) && (y == pos.y);}
   void init(int ux, int uy){ x = ux; y = uy; }
   void init_standard_notation(){}
   ~Position(){}
@@ -48,6 +66,9 @@ public:
   bool is_kill; //for undo
   Move(){}
   Move(Position ufrom, Position uto){ init(ufrom, uto); }
+  Move(const Move &mov){ from = mov.from; to = mov.to; is_kill = mov.is_kill; }
+  Move& operator=(const Move &mov){ return *this; }
+  bool operator==(const Move &mov){ return (from == mov.from) && (to == mov.to) && (mov.is_kill == is_kill);}
   void init(Position ufrom, Position uto){ from = ufrom; to = uto; is_kill = false; }
   void init_standard_notation(){}
   ~Move(){}
@@ -62,6 +83,9 @@ class Piece{
 public:
   char color; //'W' or 'B'
   Piece(char c);
+  Piece(const Piece &pc){ color = pc.color; }
+  Piece& operator=(const Piece &pc){ return *this; }
+  bool operator==(const Piece &pc){ return &pc == this;}
   ~Piece(){}
   virtual void print(){}
   virtual void possible_moves(Position from, std::list<Position> &to){}
@@ -116,7 +140,15 @@ class Graveyard{
 public:
   std::list<Piece *> graveyard;
   Graveyard(){}
-  ~Graveyard(){}
+  Graveyard(const Graveyard &gy){
+    clear();
+    for( Piece *pc : gy.graveyard ){
+      graveyard.push_back(pc);
+    }
+  }
+  Graveyard& operator=(const Graveyard &gy){ return *this; }
+  bool operator==(const Graveyard &gy){ return &gy == this;}
+  ~Graveyard(){ clear(); }
   void print();
   void bury(Piece *pc);
   bool is_king_dead();
@@ -132,6 +164,15 @@ public:
   Piece *board[ROWS][COLUMNS];
   Graveyard gy;
   Board(){ init(); }
+  Board(const Board &bd){
+    for( int i = 0; i < ROWS; i++ ){
+      for( int j = 0; j < COLUMNS; j++ ){
+        board[i][j] = bd.board[i][j];
+      }
+    }
+  }
+  Board& operator=(const Board &bd){ return *this; }
+  bool operator==(const Board &bd){ return &bd == this;}
   void init(){
     // clear board
     for( int i = 0; i < ROWS; i++ ){
@@ -184,6 +225,9 @@ public:
   std::list<Move *> moves;
   Player(){ color = 'W';}
   Player(char ucolor){ init(ucolor); }
+  Player(const Player &plyr){ init(plyr.color); for(Move *move : plyr.moves) moves.push_back(move); }
+  Player& operator=(const Player &plyr){ return *this; }
+  bool operator==(const Player &plyr){ return &plyr == this; }
   void init(char ucolor){ color = ucolor; }
   virtual ~Player(){
     std::list<Move *>::iterator it;
@@ -192,10 +236,7 @@ public:
     }
   }
   virtual bool is_human(){ return false; }
-  // gameplay functions
-  bool is_pos(std::string input);
-  Position get_pos(std::string input, bool quantifier);
-  //validates moves
+   //validates moves
   bool is_on_board(Position &pos);
   bool is_mine(Position &to, Board &gb);
   bool is_opponent(Position &to, Board &gb);
@@ -212,6 +253,8 @@ public:
   Human(char ucolor){ Player::init(ucolor); }
   ~Human(){}
   bool is_human(){ return true; }
+  bool is_pos(std::string input);
+  Position get_pos(std::string input, bool quantifier);
   std::string get_input(bool quantifier);
   bool is_valid(Position &pos, Board &gb, bool quantifier);
   bool propose_move(Move *move, Board &gb);
@@ -239,10 +282,13 @@ public:
   bool game_over;
   std::string saver;
   Game(){ init(); }
-  void init(){ turn = 'W'; game_over = false; gb.init(); p1 = new Human('W'); p2 = new Human('B'); }
+  Game(const Game &gm){ p1 = gm.p1; p2 = gm.p2; gb = gm.gb; turn = gm.turn; game_over = gm.game_over; saver = gm.saver; }
+  Game& operator=(const Game &gm){ return *this; }
+  bool operator==(const Game &gm){ return this == &gm; }
+  void init(){ turn = 'W'; game_over = false; p1 = new Human('W'); p2 = new Human('B'); }
   ~Game(){
-    delete p1, p2;
-    gb.clear();
+    delete p1;
+    delete p2;
   }
   // Game control functions
   void menu();
