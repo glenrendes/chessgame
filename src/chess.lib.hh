@@ -90,42 +90,42 @@ public:
   virtual void print(){}
   virtual void possible_moves(Position from, std::list<Position> &to){}
   virtual bool is_king(){ return false; }
-  virtual bool is_legal(Move &move){ return true; }
+  virtual bool is_legal(Move move){ return true; }
 };
 class Pawn : public Piece{
 public:
   Pawn(char c);
   ~Pawn(){}
   void print();
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 class Rook : public Piece{
 public:
   Rook(char c);
   ~Rook(){}
   void print();
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 class Knight : public Piece{
 public:
   Knight(char c);
   ~Knight(){}
   void print();
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 class Bishop : public Piece{
 public:
   Bishop(char c);
   ~Bishop(){}
   void print();
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 class Queen : public Piece{
 public:
   Queen(char c);
   ~Queen(){}
   void print();
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 class King : public Piece{
 public:
@@ -133,7 +133,7 @@ public:
   ~King(){}
   void print();
   bool is_king(){ return true; }
-  bool is_legal(Move move){ return true; }
+  bool is_legal(Move move);
 };
 
 class Graveyard{

@@ -10,31 +10,41 @@ void Pawn::print(){
   if( color == 'W' ) os << 'P';
   else os << 'p';
 }
+bool Pawn::is_legal(Move move){}
 Rook::Rook(char c) : Piece(c){}
 void Rook::print(){
   if( color == 'W' ) os << 'R';
   else os << 'r';
 }
+bool Rook::is_legal(Move move){}
 Knight::Knight(char c) : Piece(c){}
 void Knight::print(){
   if( color == 'W' ) os << 'N';
   else os << 'n';
+}
+bool Knight::is_legal(Move move){
+  int dx = (move.from.x - move.to.x); int dy = (move.from.y - move.to.y);
+  std::vector<Position> legal_moves = { Position(2, 1), Position(2, -1), Position(-2, 1), Position(-2, -1), Position(1, 2), Position(1, -2), Position(-1, 2), Position(-1, -2,)}; 
 }
 Bishop::Bishop(char c) : Piece(c){}
 void Bishop::print(){
   if( color == 'W' ) os << 'B';
   else os << 'b';
 }
+bool Bishop::is_legal(Move move){}
 Queen::Queen(char c) : Piece(c){}
 void Queen::print(){
   if( color == 'W' ) os << 'Q';
   else os << 'q';
 }
+bool Queen::is_legal(Move move){}
 King::King(char c) : Piece(c){}
 void King::print(){
   if( color == 'W' ) os << 'K';
   else os << 'k';
 }
+bool King::is_legal(Move move){}
+
 
 //---------------------------------------------------
 //---------------------------------------------------
@@ -205,9 +215,11 @@ bool Human::propose_move(Move *move, Board &gb){
         Position to = get_pos(input1, TO);
         if( is_valid(to, gb, TO) ){
           move->from = from; move->to = to;
-          if( is_opponent(to, gb) ) move->is_kill = true;
-          moves.push_back(move);
-          return true;
+          if( pc->is_legal(move) ){
+            if( is_opponent(to, gb) ) move->is_kill = true;
+            moves.push_back(move);
+            return true;
+          }
         }
         else return propose_move(move, gb);
       }
