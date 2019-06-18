@@ -1,4 +1,5 @@
 #include "chess.lib.hh"
+#include "accounting.lib.hh"
 
 int main(){
   Game *game1 = new Game;

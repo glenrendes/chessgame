@@ -17,24 +17,6 @@
 #define ROWS 8
 #define COLUMNS 8
 
-std::ostream &os = std::cout;
-std::istream &is = std::cin;
-
-int count = 0;
-void *operator new(size_t size){
-  //os << "Allocated memory.\n"; //also had constructors and destructors printing class identifiers at some point
-  count++;
-  void *pt = malloc(size);
-  return pt;
-}
-void operator delete(void* pt){
-  //os << "Deallocated memory.\n";
-  count--;
-  free(pt);
-}
-void accounting(){
-  os << "Outstanding memory allocations: " << count << ".\n";
-}
 
 //---------------------------------------------------
 //---------------------------------------------------
@@ -51,9 +33,7 @@ public:
   void init(int ux, int uy){ x = ux; y = uy; }
   void init_standard_notation(){}
   ~Position(){}
-  void print(){
-    os << "(" << x << ", " << y << ")";
-  }
+  void print();
   //void print_standard_notation(){} standard notation functions translate user input in standard to raw coordinates for code and back
 };
 
@@ -74,10 +54,7 @@ public:
   void init(Position ufrom, Position uto){ from = ufrom; to = uto; is_kill = false; }
   void init_standard_notation(){}
   ~Move(){}
-  void print(){
-    os << "Move: from "; from.print();
-    os << " to "; to.print(); os << "\n";
-  }
+  void print();
 };
 
 // Piece classes

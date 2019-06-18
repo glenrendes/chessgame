@@ -3,7 +3,33 @@
 #define FROM true
 #define TO false
 
-// Piece class functions
+
+//---------------------------------------------------
+//---------------------------------------------------
+//define streams
+std::ostream &os = std::cout;
+std::istream &is = std::cin;
+
+
+//---------------------------------------------------
+//---------------------------------------------------
+// Position class member definitions
+void Position::print(){
+  os << "(" << x << ", " << y << ")";
+}
+
+
+//---------------------------------------------------
+//---------------------------------------------------
+// Move class member definitions
+void Move::print(){
+  os << "Move: from "; from.print();
+  os << " to "; to.print(); os << "\n";
+}
+
+//---------------------------------------------------
+//---------------------------------------------------
+// Piece class member definitions
 Piece::Piece(char c) : color(c) {}
 Pawn::Pawn(char c) : Piece(c){}
 void Pawn::print(){
@@ -40,7 +66,7 @@ void King::print(){
 
 //---------------------------------------------------
 //---------------------------------------------------
-// Graveyard class functions
+// Graveyard class member definitions
 void Graveyard::print(){
   if( graveyard.empty() ) os << "The graveyard is empty. Get to killin.\n";
   else{
@@ -71,7 +97,7 @@ void Graveyard::clear(){
 
 //---------------------------------------------------
 //---------------------------------------------------
-// Board class functions
+// Board class member definitions
 void Board::print(){
   os << "\n\n        0     1     2     3     4     5     6     7\n";
   os << "      _______________________________________________\n";
@@ -112,7 +138,7 @@ void Board::clear(){
 
 //---------------------------------------------------
 //---------------------------------------------------
-// Player class functions
+// Player class member definitions
 std::string Human::get_input(bool quantifier){
   std::string input;
   if( quantifier == FROM ) os << "Please choose piece by position: ";
