@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <vector>
+#include <algorithm>
 #include <iterator>
 #include <list>
 #include <sstream>
@@ -88,52 +90,52 @@ public:
   bool operator==(const Piece &pc){ return &pc == this;}
   ~Piece(){}
   virtual void print(){}
+  virtual char type(){ return '0';};
   virtual void possible_moves(Position from, std::list<Position> &to){}
   virtual bool is_king(){ return false; }
-  virtual bool is_legal(Move move){ return true; }
 };
 class Pawn : public Piece{
 public:
   Pawn(char c);
   ~Pawn(){}
   void print();
-  bool is_legal(Move move);
+  char type(){ return color == 'W'? 'P':'p';};
 };
 class Rook : public Piece{
 public:
   Rook(char c);
   ~Rook(){}
   void print();
-  bool is_legal(Move move);
+  char type(){ return 'R';};
 };
 class Knight : public Piece{
 public:
   Knight(char c);
   ~Knight(){}
   void print();
-  bool is_legal(Move move);
+  char type(){ return 'N';};
 };
 class Bishop : public Piece{
 public:
   Bishop(char c);
   ~Bishop(){}
   void print();
-  bool is_legal(Move move);
+  char type(){ return 'B';};
 };
 class Queen : public Piece{
 public:
   Queen(char c);
   ~Queen(){}
   void print();
-  bool is_legal(Move move);
+  char type(){ return 'Q';};
 };
 class King : public Piece{
 public:
   King(char c);
   ~King(){}
   void print();
+  char type(){ return 'K';};
   bool is_king(){ return true; }
-  bool is_legal(Move move);
 };
 
 class Graveyard{
@@ -237,11 +239,13 @@ public:
   }
   virtual bool is_human(){ return false; }
    //validates moves
-  bool is_on_board(Position &pos);
-  bool is_mine(Position &to, Board &gb);
-  bool is_opponent(Position &to, Board &gb);
-  bool is_open(Position &to, Board &gb);
-  virtual bool is_valid(Position &pos, Board &gb, bool quantifier){
+  bool is_on_board(Position pos);
+  bool is_mine(Position to, Board &gb);
+  bool is_opponent(Position to, Board &gb);
+  bool is_open(Position to, Board &gb);
+  std::vector<Position> possible_moves(Position from, Board &gb);
+  bool is_legal(Move &move, Board &gb);
+  virtual bool is_valid(Position pos, Board &gb, bool quantifier){
     return is_mine(pos, gb) && quantifier || is_opponent(pos, gb) && !quantifier || is_open(pos, gb) && !quantifier;
   }
   //move proposal done by children
@@ -256,7 +260,7 @@ public:
   bool is_pos(std::string input);
   Position get_pos(std::string input, bool quantifier);
   std::string get_input(bool quantifier);
-  bool is_valid(Position &pos, Board &gb, bool quantifier);
+  bool is_valid(Position pos, Board &gb, bool quantifier);
   bool propose_move(Move *move, Board &gb);
 };
 class CPU : public Player{
