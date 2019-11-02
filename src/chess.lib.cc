@@ -23,43 +23,157 @@ void Position::print(){
 //---------------------------------------------------
 // Move class member definitions
 void Move::print(){
+  if( !(from && to) ){
+    os << "No move selected.";
+    return;
+  }
   os << "Move: from "; from.print();
   os << " to "; to.print(); os << "\n";
 }
+bool Move::is_legal(Move &move, Board &gb){
+  //to-do:  "operator square brackets" - overload [][] to return a Piece *
+  //to-do: create operator overload for Position - Position
+  std::vector<Position> legal_offsets = (*gb.board[from.x][from.y])->possible_moves(move.from, gb);
+  int dx = (move.to.x - move.from.x); int dy = (move.to.y - move.from.y);
+  Position dp(dx, dy);
+  std::vector<Position>::iterator it = std::find(legal_offsets.begin(), legal_offsets.end(), dp);
+  return it != legal_offsets.end();
+}
+
 
 //---------------------------------------------------
 //---------------------------------------------------
 // Piece class member definitions
-Piece::Piece(char c) : color(c) {}
-Pawn::Pawn(char c) : Piece(c){}
+Piece::Piece(color c, type t) : m_color(c), m_type(t) {}
+
+Pawn::Pawn(color c, type t) : Piece(c, t){}
 void Pawn::print(){
-  if( color == 'W' ) os << 'P';
+  if( m_color == white ) os << 'P';
   else os << 'p';
 }
-Rook::Rook(char c) : Piece(c){}
+std::vector<Position> Pawn::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = {};
+  switch(m_color){
+  case white:
+    if( gb.is_open(Position((from.x-1), from.y)) ){
+      legal_offsets.push_back(Position(-1, 0));
+      if( gb.is_open(Position((from.x-2), from.y)) && from.x == 6 ) legal_offsets.push_back(Position(-2, 0));
+    }
+    if( gb.is_opponent(Position(from.x-1, from.y-1)) ) legal_offsets.push_back(Position(-1, -1));
+    if( gb.is_opponent(Position(from.x-1, from.y+1)) ) legal_offsets.push_back(Position(-1, 1));
+    break;
+
+  case black:
+    if( gb.is_open(Position(from.x+1, from.y)) ){
+      legal_offsets.push_back(Position(1, 0));
+      if( gb.is_open(Position(from.x+2, from.y)) && from.x == 1 ) legal_offsets.push_back(Position(2, 0));
+    }
+    if( gb.is_opponent(Position(from.x+1, from.y-1)) ) legal_offsets.push_back(Position(1, -1));
+    if( gb.is_opponent(Position(from.x+1, from.y+1)) ) legal_offsets.push_back(Position(1, 1));
+    break;
+  }
+  return legal_offsets;
+}
+
+Rook::Rook(color c, type t) : Piece(c, t){}
 void Rook::print(){
-  if( color == 'W' ) os << 'R';
+  if( m_color == white ) os << 'R';
   else os << 'r';
 }
-Knight::Knight(char c) : Piece(c){}
+std::vector<Position> Rook::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = {};
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x, from.y+n)) || gb.is_opponent(Position(from.x, from.y+n)))){
+        legal_offsets.push_back(Position(0, n));
+        if( !gb.is_open(Position(from.x, from.y+n)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x, from.y-n)) || gb.is_opponent(Position(from.x, from.y-n)))){
+        legal_offsets.push_back(Position(0, -n));
+        if( !gb.is_open(Position(from.x, from.y-n)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x+n, from.y)) || gb.is_opponent(Position(from.x+n, from.y)))){
+        legal_offsets.push_back(Position(n, 0));
+        if( !gb.is_open(Position(from.x+n, from.y)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x-n, from.y)) || gb.is_opponent(Position(from.x-n, from.y)))){
+        legal_offsets.push_back(Position(-n, 0));
+        if( !gb.is_open(Position(from.x-n, from.y)) ) n = 9;
+        n++;
+      }}
+  return legal_offsets;
+}
+
+Knight::Knight(color c, type t) : Piece(c, t){}
 void Knight::print(){
-  if( color == 'W' ) os << 'N';
+  if( m_color == white ) os << 'N';
   else os << 'n';
 }
-Bishop::Bishop(char c) : Piece(c){}
+std::vector<Position> Knight::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = {Position(2, 1), Position(2, -1), Position(-2, 1), Position(-2, -1), Position(1, 2), Position(1, -2), Position(-1, 2), Position(-1, -2)};
+  return legal_offsets;
+}
+
+Bishop::Bishop(color c, type t) : Piece(c, t){}
 void Bishop::print(){
-  if( color == 'W' ) os << 'B';
+  if( m_color == white ) os << 'B';
   else os << 'b';
 }
-Queen::Queen(char c) : Piece(c){}
+std::vector<Position> Bishop::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = {};
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x+n, from.y+n)) || gb.is_opponent(Position(from.x+n, from.y+n)))){
+        legal_offsets.push_back(Position(n, n));
+        if( !gb.is_open(Position(from.x+n, from.y+n)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x+n, from.y-n)) || gb.is_opponent(Position(from.x+n, from.y-n)))){
+        legal_offsets.push_back(Position(n, -n));
+        if( !gb.is_open(Position(from.x+n, from.y-n)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x-n, from.y+n)) || gb.is_opponent(Position(from.x-n, from.y+n)))){
+        legal_offsets.push_back(Position(-n, n));
+        if( !gb.is_open(Position(from.x-n, from.y+n)) ) n = 9;
+        n++;
+      }}
+    {int n=1;
+      while(n < 9 && (gb.is_open(Position(from.x-n, from.y-n)) || gb.is_opponent(Position(from.x-n, from.y-n)))){
+        legal_offsets.push_back(Position(-n, -n));
+        if( !gb.is_open(Position(from.x-n, from.y-n)) ) n = 9;
+        n++;
+      }}
+  return legal_offsets;
+}
+
+
+Queen::Queen(color c, type t) : Piece(c, t){}
 void Queen::print(){
-  if( color == 'W' ) os << 'Q';
+  if( m_color == white ) os << 'Q';
   else os << 'q';
 }
-King::King(char c) : Piece(c){}
+std::vector<Position> King::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = Rook::possible_moves(from, gb);
+  std::vector diagonal_offsets = Bishop::possiblemoves(from, gb);
+  legal_offsets.insert(legal_offsets.end(), diagonal_offsets.begin(), diagonal_offsets.end());
+  return legal_offsets;
+}
+
+King::King(color c, type t) : Piece(c, t){}
 void King::print(){
-  if( color == 'W' ) os << 'K';
+  if( m_color == white ) os << 'K';
   else os << 'k';
+}
+std::vector<Position> King::possible_moves(Position from, Board &gb){
+  std::vector legal_offsets = {Position(0, 0), Position(0, 1), Position(0, -1), Position(1, 0), Position(1, 1), Position(1, -1), Position(-1, 0), Position(-1, 1), Position(-1, -1),};
+  return legal_offsets;
 }
 
 
@@ -81,7 +195,8 @@ bool Graveyard::is_king_dead(){
   bool king_dead = false;
   std::list<Piece *>::iterator it;
   for( it = graveyard.begin(); it != graveyard.end(); it++ ){
-    king_dead = (*it)->is_king();
+    if (!king_dead) king_dead = (*it)->is_king();
+    else break;
   }
   return king_dead;
 }
@@ -151,6 +266,7 @@ bool Human::is_pos(std::string input){
   else return false;
 }
 Position Human::get_pos(std::string input, bool quantifier){
+  //to-do: create constructor for Position that takes a string and returns a Position
   Position from, to;
   if( quantifier == FROM ){
     from.x = input[0] - '0';
@@ -165,117 +281,32 @@ Position Human::get_pos(std::string input, bool quantifier){
   return from;
 }
 void Game::change_turn(){
-  turn = turn == 'W'? 'B':'W';
+  turn = turn == white? black : white;
 }
-bool Player::is_on_board(Position pos){
-  return (0 <= pos.x) && (pos.x < ROWS) && (0 <= pos.y) && (pos.y < COLUMNS);
+bool Position::is_on_board(){
+  return (0 <= x) && (x < ROWS) && (0 <= y) && (y < COLUMNS);
 }
-bool Player::is_mine(Position pos, Board &gb){
-  if( !is_on_board(pos) ) return false;
-  if( gb.board[pos.x][pos.y] == nullptr ) return false;
-  if( color == gb.board[pos.x][pos.y]->color ) return true;
-  else return false;
+bool Board::is_open(Position pos){
+  return pos.is_on_board() && (board[pos.x][pos.y] == nullptr);
 }
-bool Player::is_opponent(Position pos, Board &gb){
-  if( !is_on_board(pos) ) return false;
-  if( gb.board[pos.x][pos.y] == nullptr ) return false;
-  else return !is_mine(pos, gb);
+bool Board::is_mine(Position pos){
+  return pos.is_on_board() && !is_open() && (turn == board[pos.x][pos.y]->m_color);
 }
-bool Player::is_open(Position pos, Board &gb){
-  return is_on_board(pos) && !is_mine(pos, gb) && !is_opponent(pos, gb);
+bool Board::is_opponent(Position pos){
+  return pos.is_on_board && !is_open() && !is_mine(pos);
 }
 bool Human::is_valid(Position pos, Board &gb, bool quantifier){
   if( Player::is_valid(pos, gb, quantifier) ) return true;
   if( pos.x == -1 ) return false;
-  else if( !is_on_board(pos) )
+  else if( !pos.is_on_board() )
     os << "Invalid move. Position not on board.\n";
-  else if( is_open(pos, gb) && quantifier )
+  else if( gb.is_open(pos) && quantifier )
     os << "Invalid move. No piece selected.\n";
-  else if( is_opponent(pos, gb) && quantifier)
+  else if( gb.is_opponent(pos) && quantifier)
     os << "Invalid move. Not your piece.\n";
-  else if( is_mine(pos, gb) && !quantifier )
+  else if( gb.is_mine(pos) && !quantifier )
     os << "Invalid move. Can't kill your own piece.\n";
   return false;
-}
-std::vector<Position> Player::possible_moves(Position from, Board &gb){
-  std::vector<Position> legal_changes;
-  int fx = from.x, fy = from.y;
-  char type = (*gb.board[fx][fy]).type();
-  switch(type){
-  case 'P':
-    if( is_open(Position((fx-1), fy), gb) ){
-      legal_changes.push_back(Position(-1, 0));
-      if( is_open(Position((fx-2), fy), gb) && fx == 6 ) legal_changes.push_back(Position(-2, 0));
-    }
-    if( is_opponent(Position(fx-1, fy-1), gb) ) legal_changes.push_back(Position(-1, -1));
-    if( is_opponent(Position(fx-1, fy+1), gb) ) legal_changes.push_back(Position(-1, 1));
-    break;
-
-  case 'p':
-    if( is_open(Position(fx+1, fy), gb) ){
-      legal_changes.push_back(Position(1, 0));
-      if( is_open(Position(fx+2, fy), gb) && fx == 1 ) legal_changes.push_back(Position(2, 0));
-    }
-      if( is_opponent(Position(fx+1, fy-1), gb) ) legal_changes.push_back(Position(1, -1));
-      if( is_opponent(Position(fx+1, fy+1), gb) ) legal_changes.push_back(Position(1, 1));
-    break;
-  
-  case 'N':  { Position arr[] = {Position(2, 1), Position(2, -1), Position(-2, 1), Position(-2, -1), Position(1, 2), Position(1, -2), Position(-1, 2), Position(-1, -2)};
-      legal_changes.insert(legal_changes.end(), std::begin(arr), std::end(arr));}
-    break;
-
-  case 'K':  {Position arr[] = {Position(0, 0), Position(0, 1), Position(0, -1), Position(1, 0), Position(1, 1), Position(1, -1), Position(-1, 0), Position(-1, 1), Position(-1, -1),};
-      legal_changes.insert(legal_changes.end(), std::begin(arr), std::end(arr));}
-    break;
-
-  case 'Q':
-  case 'R':
-    for(int n = 1; n < 9 && is_open(Position(fx, fy+n), gb); n++){
-      legal_changes.push_back(Position(0, n));
-      if( is_opponent(Position(fx, fy+(n+1)), gb) ) legal_changes.push_back(Position(0, n+1));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx, fy-n), gb); n++){
-      legal_changes.push_back(Position(0, -n));
-      if( is_opponent(Position(fx, fy-(n+1)), gb) ) legal_changes.push_back(Position(0, -(n+1)));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx+n, fy), gb); n++){
-      legal_changes.push_back(Position(n, 0));
-      if( is_opponent(Position(fx+(n+1), fy), gb) ) legal_changes.push_back(Position(n+1, 0));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx-n, fy), gb); n++){
-      legal_changes.push_back(Position(-n, 0));
-      if( is_opponent(Position(fx-(n+1), fy), gb) ) legal_changes.push_back(Position(-(n+1), 0));
-    }
-    if(type != 'Q')
-      break;
-  
-  case 'B':
-    for(int n = 1; n < 9 && is_open(Position(fx+n, fy+n), gb); n++){
-      legal_changes.push_back(Position(n, n));
-      if( is_opponent(Position(fx+n, fy+(n+1)), gb) ) legal_changes.push_back(Position(n+1, n+1));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx+n, fy-n), gb); n++){
-      legal_changes.push_back(Position(n, -n));
-      if( is_opponent(Position(fx+n, fy-(n+1)), gb) ) legal_changes.push_back(Position(n+1, -(n+1)));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx-n, fy+n), gb); n++){
-      legal_changes.push_back(Position(-n, n));
-      if( is_opponent(Position(fx-(n+1), fy+(n+1)), gb) ) legal_changes.push_back(Position(-(n+1), n+1));
-    }
-    for(int n = 1; n < 9 && is_open(Position(fx-n, fy-n), gb); n++){
-      legal_changes.push_back(Position(-n, -n));
-      if( is_opponent(Position(fx-(n+1), fy-(n+1)), gb) ) legal_changes.push_back(Position(-(n+1), -(n+1)));
-        }
-    break;
-  }
-  return legal_changes;
-}
-bool Player::is_legal(Move &move, Board &gb){
-  std::vector<Position> legal_changes = possible_moves(move.from, gb);
-  int dx = (move.to.x - move.from.x); int dy = (move.to.y - move.from.y);
-  Position dp(dx, dy);
-  std::vector<Position>::iterator it = std::find(legal_changes.begin(), legal_changes.end(), dp);
-  return it != legal_changes.end();
 }
 bool CPU::propose_move(Move *move, Board &gb){
   //get possible (and eventually legal) position
@@ -291,45 +322,41 @@ bool CPU::propose_move(Move *move, Board &gb){
     }
   }
   move->from = from; move->to = to;
-  if( is_opponent(to, gb) ) move->is_kill = true;
+  if( gb.is_opponent(to) ) move->is_kill = true;
   moves.push_back(move);
   return true;
 }
-bool Human::propose_move(Move *move, Board &gb){
+ bool Human::propose_move(Move *move, Board &gb, Position repeat){
   //check whose turn
-  if( color == 'W' ) os << "Player 1's turn (White)\n";
+  if( m_color == white ) os << "Player 1's turn (White)\n";
   else os << "Player 2's turn (Black)\n";
   
   //get move from user while checking validity
-      //get from position
-  std::string input = get_input(FROM);
-  if( is_pos(input) ){ 
+  //get from position and check validity
+  if(repeat) Position from = repeat;
+  else {
+    std::string input = get_input(FROM);
+    if( !is_pos(input) ) return false;
     Position from = get_pos(input, FROM);
-    if( is_valid(from, gb, FROM) ){
-      Piece *pc = gb.board[from.x][from.y];
-      //get to position
-      std::string input1 = get_input(TO);
-      if( is_pos(input1) ){
-        Position to = get_pos(input1, TO);
-        if( is_valid(to, gb, TO) ){
-          move->from = from; move->to = to;
-          if( is_legal(*move, gb) ){
-            if( is_opponent(to, gb) ) move->is_kill = true;
-            moves.push_back(move);
-            return true;
-          }
-          else {
-            os << "This piece cannot move like that.\n";
-            return propose_move(move,gb);
-          }
-        }
-        else return propose_move(move, gb);
-      }
-      return false;
-    }
-  else return propose_move(move, gb);
   }
-  else return false;
+  if( !is_valid(from, gb, FROM) ) return propose_move(move, gb, NULL); //repeat prompt
+  Piece *pc = gb.board[from.x][from.y];
+  //get to position and check validity
+  std::string input1 = get_input(TO);
+  if( !is_pos(input1) ) return false;
+  Position to = get_pos(input1, TO);
+  if( !is_valid(to, gb, TO) ) return propose_move(move, gb, from); //repeat prompt but skip from
+  move->from = from; move->to = to;
+  //check that move is legal according to the rules of chess
+  if( move->is_legal(*move, gb) ){
+    if( gb.is_opponent(to) ) move->is_kill = true;
+    moves.push_back(move);
+    return true;
+  }
+  else {
+    os << "This piece cannot move like that.\n";
+    return propose_move(move,gb);
+  }
 }
 
 
@@ -421,7 +448,7 @@ void Game::load_file(std::string &filename){
     Position from(f1, f2), to(t1, t2);
     Move *move = new Move(from, to);
     Player *p = turn == 'W'? p1:p2;
-    if( p->is_opponent(to, gb) ){ gb.kill(to); move->is_kill = true; }
+    if( p->gb.is_opponent(to) ){ gb.kill(to); move->is_kill = true; }
     p->moves.push_back(move);
     gb.board[to.x][to.y] = gb.board[from.x][from.y];
     gb.board[from.x][from.y] = nullptr;
@@ -457,8 +484,8 @@ bool Game::mode(){
   is >> input;
   if( (input.length() == 1) && std::isdigit(input[0]) ) mode = input[0] - '1';
   else{ invalid_input(); return false; }
-  if( !mode ){ delete p2; p2 = new CPU('B'); gb.print(); }
-  else{ delete p2; p2 = new Human('B'); gb.print(); }
+  if( !mode ){ delete p2; p2 = new CPU(black); gb.print(); }
+  else{ delete p2; p2 = new Human(black); gb.print(); }
   return true;
 }
 
@@ -512,7 +539,7 @@ bool Game::help(){
 }
 
 void Game::goodbye(){
-  if( turn == 'B' && gb.gy.is_king_dead() )
+  if( turn == black && gb.gy.is_king_dead() )
     os << "The game is over!   White wins.   Well Played!\n ";
   else if( gb.gy.is_king_dead() )
     os << "The game is over!   Black wins.   Well Played!\n ";
@@ -525,7 +552,7 @@ void Game::play(){
   while( !game_over ){
     Position from, to;
     Move *move = new Move(from, to);
-    bool proposed = turn == 'W'? p1->propose_move(move, gb):p2->propose_move(move, gb);
+    bool proposed = turn == white? p1->propose_move(move, gb, NULL):p2->propose_move(move, gb, NULL);
     if( proposed ){ gb.make_move(move); gb.print(); change_turn(); game_over = gb.gy.is_king_dead(); }
     else{ delete move;  game_over = help(); }
   }
