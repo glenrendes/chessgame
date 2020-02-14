@@ -18,7 +18,12 @@
 #define ROWS 8
 #define COLUMNS 8
 
-enum color { null, white, black };  
+#define FROM true
+#define TO false
+
+enum color { null, white, black };
+
+class Board;
 
 //---------------------------------------------------
 //---------------------------------------------------
@@ -28,11 +33,13 @@ public:
   int x;
   int y;
   Position(){ x = -1; y = -1; }
-  Position(int ux, int uy){ init(ux, uy); }
+  Position(int input_x, int input_y){ init(input_x, input_y); }
   Position(const Position &pos){ init(pos.x, pos.y); }
-  Position operator=(const Position &pos){ init(pos.x, pos.y); return *this; }
+  Position(const std::string &input){ init((input[0] - '0'), (input[1] - '0')); }
+  Position &operator=(const Position &pos){ init(pos.x, pos.y); return *this; }
   bool operator==(const Position &pos){ return (x == pos.x) && (y == pos.y);}
-  void init(int ux, int uy){ x = ux; y = uy; }
+  Position &operator-(const Position &from){ x -= from.x; y -= from.y; return *this; }
+  void init(int input_x, int input_y){ x = input_x; y = input_y; }
   void init_standard_notation(){}
   ~Position(){}
   void print();
@@ -58,7 +65,7 @@ public:
   void init_standard_notation(){}
   ~Move(){}
   void print();
-  bool is_legal(Move &move, Board &gb);
+  bool is_legal(Board &gb);
 };
 
 // Piece classes
@@ -66,18 +73,16 @@ class Piece{
 public:
   enum type { null, pawn, rook, knight, bishop, queen, king };
 public:
-  Piece(color c, type t);//intialize Piece with given color and type
-  // to-do: change color chars to enum values
-  Piece(const Piece &pc){ m_color = pc.color; }
+  color m_color;
+  type m_type;
+  Piece(color c){ m_color = c; } //intialize Piece with given color, children handle type
+  Piece(const Piece &pc){ m_color = pc.m_color; m_type = pc.m_type; }
   Piece& operator=(const Piece &other){ return *this; }
   bool operator==(const Piece &other){ return other.m_color == m_color && other.m_type == m_type; }
   ~Piece(){}
   virtual void print(){}
-  virtual std::vector<Position> possible_moves(Position from, Board &gb);
+  virtual std::vector<Position> possible_moves(Position from, Board &gb){ std::vector<Position> pm; return pm; }
   virtual bool is_king(){ return false; }
-protected:
-  color m_color;
-  type m_type;
 };
 class Pawn : public Piece{
 public:
@@ -107,7 +112,7 @@ public:
   void print();
   std::vector<Position> possible_moves(Position from, Board &gb);
 };
-class Queen : public Piece{
+class Queen : public Piece {
 public:
   Queen(color c);
   ~Queen(){}
@@ -150,6 +155,7 @@ class Board{
 public:
   Piece *board[ROWS][COLUMNS];
   Graveyard gy;
+  color turn; // p1 = white, p2 = black
   Board(){ init(); }
   Board(const Board &bd){
     for( int i = 0; i < ROWS; i++ ){
@@ -157,9 +163,12 @@ public:
         board[i][j] = bd.board[i][j];
       }
     }
+    gy = bd.gy;
+    turn = bd.turn;
   }
   Board& operator=(const Board &bd){ return *this; }
   bool operator==(const Board &bd){ return &bd == this;}
+  //Piece *operator[](const Position &pos){return board[pos.x][pos.y];}
   void init(){
     // clear board
     for( int i = 0; i < ROWS; i++ ){
@@ -192,11 +201,14 @@ public:
     board[7][5] = new Bishop(white);
     board[7][6] = new Knight(white);
     board[7][7] = new Rook(white);
+    // starts on white's turn
+    turn = white;
   }
   ~Board(){
     clear();
   }
   void print();
+  void change_turn();
   void kill(Position &to);
   void make_move(Move *move);
   void clear();
@@ -212,10 +224,11 @@ public:
 // a Player can be human or computer
 class Player{
 public:
+  color m_color; //black or white
   std::list<Move *> moves;
-  Player(){ color = white;}
+  Player(){ m_color = white;}
   Player(color c){ init(c); }
-  Player(const Player &plyr){ init(plyr.color); for(Move *move : plyr.moves) moves.push_back(move); }
+  Player(const Player &plyr){ init(plyr.m_color); for(Move *move : plyr.moves) moves.push_back(move); }
   Player& operator=(const Player &plyr){ return *this; }
   bool operator==(const Player &plyr){ return &plyr == this; }
   void init(color c){ m_color = c; }
@@ -231,8 +244,6 @@ public:
   }
   //move proposal done by children
   virtual bool propose_move(Move *move, Board &gb){ return false; }
-protected:
-  color m_color; //black or white
 };
 class Human : public Player{
 public:
@@ -240,10 +251,9 @@ public:
   Human(color c){ Player::init(c); }
   ~Human(){}
   bool is_pos(std::string input);
-  Position get_pos(std::string input, bool quantifier);
   std::string get_input(bool quantifier);
   bool is_valid(Position pos, Board &gb, bool quantifier);
-  bool propose_move(Move *move, Board &gb, Position repeat);
+  bool propose_move(Move *move, Board &gb);
 };
 class CPU : public Player{
 public:
@@ -263,14 +273,13 @@ public:
   Player *p1;
   Player *p2;
   Board gb;
-  color turn; // p1 = white, p2 = black
   bool game_over;
   std::string saver;
   Game(){ init(); }
-  Game(const Game &gm){ p1 = gm.p1; p2 = gm.p2; gb = gm.gb; turn = gm.turn; game_over = gm.game_over; saver = gm.saver; }
+  Game(const Game &gm){ p1 = gm.p1; p2 = gm.p2; gb = gm.gb; game_over = gm.game_over; saver = gm.saver; }
   Game& operator=(const Game &gm){ return *this; }
   bool operator==(const Game &gm){ return this == &gm; }
-  void init(){ turn = white; game_over = false; p1 = new Human(white); p2 = new Human(black); }
+  void init(){ game_over = false; p1 = new Human(white); p2 = new Human(black); }
   ~Game(){
     delete p1;
     delete p2;
@@ -290,7 +299,6 @@ public:
   void goodbye();
   // Game play functions
   bool mode();
-  void change_turn();
   void play(); 
 };
 
